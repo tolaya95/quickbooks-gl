@@ -1,9 +1,22 @@
 # quickbooks-gl
 let
+# Source: Reads the workbook at the specified path and loads the QuickBooks General Ledger (2) sheet
     Source = Excel.Workbook(File.Contents("C:\Users\tolay\OneDrive\Desktop\Quickwash Data Connections\QuickBooks Data Tables.xlsm"), null, true),
     #"QuickBooks General Ledger (2)_Sheet" = Source{[Item="QuickBooks General Ledger (2)",Kind="Sheet"]}[Data],
+    
+# Promoted Headers: Promotes the first row to be used as column headers
     #"Promoted Headers" = Table.PromoteHeaders(#"QuickBooks General Ledger (2)_Sheet", [PromoteAllScalars=true]),
+#   Changed Type: Converts the data types of the specified columns
+#   "Date" to text
+#   "Transaction Type" to text
+#   "Name" to text
+#   "Memo/Description" to text
+#   "Split" to text
+#   "Amount" to number
+#   "Account" to text   
     #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Date", type text}, {"Transaction Type", type text}, {"Name", type text}, {"Memo/Description", type text}, {"Split", type text}, {"Amount", type number}, {"Account", type text}}),
+
+
     #"Filtered Rows" = Table.SelectRows(#"Changed Type", each ([Transaction Type] <> null)),
     #"Merged Queries" = Table.NestedJoin(#"Filtered Rows", {"Account"}, qw_expense_account_list, {"Account"}, "QW Expense Account List", JoinKind.LeftOuter),
     #"Expanded QW Expense Account List" = Table.ExpandTableColumn(#"Merged Queries", "QW Expense Account List", {"Grouped Category"}, {"QW Expense Account List.Grouped Category"}),
